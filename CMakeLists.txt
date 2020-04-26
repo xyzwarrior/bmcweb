@@ -14,13 +14,13 @@ option (
     BMCWEB_ENABLE_KVM
     "Enable the KVM host video WebSocket.  Path is '/kvm/0'.  Video is from the
     BMC's '/dev/video' device."
-    ON
+    OFF
 )
 option (
     BMCWEB_ENABLE_VM_WEBSOCKET
     "Enable the Virtual Media WebSocket. Path is '/vm/0/0'to open the websocket.
     See https://github.com/openbmc/jsnbd/blob/master/README."
-    ON
+    OFF
 )
 option (
     BMCWEB_ENABLE_VM_NBDPROXY
@@ -44,7 +44,7 @@ option (
     BMCWEB_ENABLE_HOST_SERIAL_WEBSOCKET
     "Enable host serial console WebSocket.  Path is '/console0'.  See
     https://github.com/openbmc/docs/blob/master/console.md."
-    ON
+    OFF
 )
 option (
     BMCWEB_ENABLE_STATIC_HOSTING
@@ -140,6 +140,11 @@ option (
 option (
     BMCWEB_INSECURE_UNRESTRICTED_SENSOR_OVERRIDE
     "Enables Sensor override feature without any check."
+    OFF)
+
+option (
+    BMCWEB_ENABLE_SDBUS
+    "Not using systemd and dbus"
     OFF)
 
 set (BMCWEB_HTTP_REQ_BODY_LIMIT_MB "30" CACHE STRING
@@ -423,6 +428,8 @@ target_compile_definitions (
     -DBMCWEB_ENABLE_IBM_MANAGEMENT_CONSOLE>
     $<$<BOOL:${BMCWEB_INSECURE_ENABLE_HTTP_PUSH_STYLE_EVENTING}>:
     -DBMCWEB_INSECURE_ENABLE_HTTP_PUSH_STYLE_EVENTING>
+    $<$<BOOL:${BMCWEB_ENABLE_SDBUS}>:
+    -DBMCWEB_ENABLE_SDBUS>
 )
 
 # configure and install systemd unit files

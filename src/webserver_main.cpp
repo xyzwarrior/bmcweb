@@ -106,8 +106,10 @@ int main(int argc, char** argv)
     BMCWEB_LOG_INFO << "bmcweb (" << __DATE__ << ": " << __TIME__ << ')';
     setupSocket(app);
 
+#ifdef BMCWEB_ENABLE_SDBUS
     crow::connections::systemBus =
         std::make_shared<sdbusplus::asio::connection>(*io);
+#endif
 
 #ifdef BMCWEB_ENABLE_VM_NBDPROXY
     crow::nbd_proxy::requestRoutes(app);
@@ -118,5 +120,7 @@ int main(int argc, char** argv)
     app.run();
     io->run();
 
+#ifdef BMCWEB_ENABLE_SDBUS
     crow::connections::systemBus.reset();
+#endif
 }
