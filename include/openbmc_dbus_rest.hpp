@@ -21,7 +21,11 @@
 #include <boost/container/flat_set.hpp>
 #include <dbus_singleton.hpp>
 #include <dbus_utility.hpp>
+#if __GNUC__ >= 8
 #include <filesystem>
+#else
+#include <experimental/filesystem>
+#endif
 #include <fstream>
 #include <regex>
 #include <sdbusplus/message/types.hpp>

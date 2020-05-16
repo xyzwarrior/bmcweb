@@ -1256,6 +1256,7 @@ class Router
             return;
         }
 
+        /*
         crow::connections::systemBus->async_method_call(
             [&req, &res, &rules, ruleIndex, found](
                 const boost::system::error_code ec,
@@ -1305,6 +1306,33 @@ class Router
             "xyz.openbmc_project.User.Manager", "/xyz/openbmc_project/user",
             "xyz.openbmc_project.User.Manager", "GetUserInfo",
             req.session->username);
+        */
+
+        std::string userRole{};
+                {
+                    userRole = "priv-admin";
+                    BMCWEB_LOG_DEBUG << "userName = " << req.session->username
+                                     << " userRole = " << userRole.c_str();
+                }
+
+                // Get the user privileges from the role
+                redfish::Privileges userPrivileges =
+                    redfish::getUserPrivileges(userRole);
+
+                if (!rules[ruleIndex]->checkPrivileges(userPrivileges))
+                {
+                    res.result(boost::beast::http::status::forbidden);
+                    res.end();
+                    return;
+                }
+
+                req.userRole = userRole;
+
+                rules[ruleIndex]->handle(req, res, found.second);
+
+        BMCWEB_LOG_DEBUG << "userName = " << req.session->username
+                         << " userRole = " << req.userRole;
+
     }
 
     void debugPrint()

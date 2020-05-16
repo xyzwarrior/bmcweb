@@ -28,7 +28,11 @@
 #include <boost/container/flat_map.hpp>
 #include <boost/system/linux_error.hpp>
 #include <error_messages.hpp>
+#if __GNUC__ >= 8
 #include <filesystem>
+#else
+#include <experimental/filesystem>
+#endif
 #include <string_view>
 #include <variant>
 

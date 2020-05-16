@@ -7,7 +7,11 @@
 
 #include <boost/algorithm/string/replace.hpp>
 #include <boost/container/flat_set.hpp>
+#if __GNUC__ >= 8
 #include <filesystem>
+#else
+#include <experimental/filesystem>
+#endif
 #include <fstream>
 #include <string>
 

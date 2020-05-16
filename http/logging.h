@@ -3,7 +3,11 @@
 #include <cstdio>
 #include <cstdlib>
 #include <ctime>
+#if __GNUC__ >= 8
 #include <filesystem>
+#else
+#include <experimental/filesystem>
+#endif
 #include <iostream>
 #include <sstream>
 #include <string>

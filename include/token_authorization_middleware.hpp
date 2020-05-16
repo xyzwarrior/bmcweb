@@ -138,10 +138,16 @@ class Middleware
 
         BMCWEB_LOG_DEBUG << "[AuthMiddleware] Authenticating user: " << user;
 
-        if (pamAuthenticateUser(user, pass) != PAM_SUCCESS)
+        //if (pamAuthenticateUser(user, pass) != PAM_SUCCESS)
+        //{
+        //    return nullptr;
+        //}
+
+        if (sys_auth_user(user.c_str(), pass.c_str()) != 0)
         {
             return nullptr;
         }
+
 
         // TODO(ed) generateUserSession is a little expensive for basic
         // auth, as it generates some random identifiers that will never be

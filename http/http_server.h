@@ -15,7 +15,11 @@
 #include <boost/date_time/posix_time/posix_time.hpp>
 #include <chrono>
 #include <cstdint>
+#if __GNUC__ >= 8
 #include <filesystem>
+#else
+#include <experimental/filesystem>
+#endif
 #include <future>
 #include <memory>
 #include <ssl_key_handler.hpp>
