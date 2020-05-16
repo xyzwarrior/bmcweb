@@ -34,39 +34,39 @@ namespace redfish
  */
 void getChassisState(std::shared_ptr<AsyncResp> aResp)
 {
-    crow::connections::systemBus->async_method_call(
-        [aResp{std::move(aResp)}](
-            const boost::system::error_code ec,
-            const std::variant<std::string> &chassisState) {
-            if (ec)
-            {
-                BMCWEB_LOG_DEBUG << "DBUS response error " << ec;
-                messages::internalError(aResp->res);
-                return;
-            }
+    //crow::connections::systemBus->async_method_call(
+    //    [aResp{std::move(aResp)}](
+    //        const boost::system::error_code ec,
+    //        const std::variant<std::string> &chassisState) {
+    //        if (ec)
+    //        {
+    //            BMCWEB_LOG_DEBUG << "DBUS response error " << ec;
+    //            messages::internalError(aResp->res);
+    //            return;
+    //        }
 
-            const std::string *s = std::get_if<std::string>(&chassisState);
-            BMCWEB_LOG_DEBUG << "Chassis state: " << *s;
-            if (s != nullptr)
-            {
+    //        const std::string *s = std::get_if<std::string>(&chassisState);
+    //        BMCWEB_LOG_DEBUG << "Chassis state: " << *s;
+    //        if (s != nullptr)
+    //        {
                 // Verify Chassis State
-                if (*s == "xyz.openbmc_project.State.Chassis.PowerState.On")
-                {
+    //            if (*s == "xyz.openbmc_project.State.Chassis.PowerState.On")
+    //            {
                     aResp->res.jsonValue["PowerState"] = "On";
                     aResp->res.jsonValue["Status"]["State"] = "Enabled";
-                }
-                else if (*s ==
-                         "xyz.openbmc_project.State.Chassis.PowerState.Off")
-                {
-                    aResp->res.jsonValue["PowerState"] = "Off";
-                    aResp->res.jsonValue["Status"]["State"] = "StandbyOffline";
-                }
-            }
-        },
-        "xyz.openbmc_project.State.Chassis",
-        "/xyz/openbmc_project/state/chassis0",
-        "org.freedesktop.DBus.Properties", "Get",
-        "xyz.openbmc_project.State.Chassis", "CurrentPowerState");
+    //            }
+    //            else if (*s ==
+    //                     "xyz.openbmc_project.State.Chassis.PowerState.Off")
+    //            {
+    //                aResp->res.jsonValue["PowerState"] = "Off";
+    //                aResp->res.jsonValue["Status"]["State"] = "StandbyOffline";
+    //            }
+    //        }
+    //   },
+    //   "xyz.openbmc_project.State.Chassis",
+    //    "/xyz/openbmc_project/state/chassis0",
+    //    "org.freedesktop.DBus.Properties", "Get",
+    //    "xyz.openbmc_project.State.Chassis", "CurrentPowerState");
 }
 
 /**
@@ -89,7 +89,7 @@ void getIntrusionByService(std::shared_ptr<AsyncResp> aResp,
                            const std::string &objPath)
 {
     BMCWEB_LOG_DEBUG << "Get intrusion status by service \n";
-
+    /*
     crow::connections::systemBus->async_method_call(
         [aResp{std::move(aResp)}](const boost::system::error_code ec,
                                   const std::variant<std::string> &value) {
@@ -114,6 +114,9 @@ void getIntrusionByService(std::shared_ptr<AsyncResp> aResp,
         },
         service, objPath, "org.freedesktop.DBus.Properties", "Get",
         "xyz.openbmc_project.Chassis.Intrusion", "Status");
+    */
+    aResp->res.jsonValue["PhysicalSecurity"] = {
+                {"IntrusionSensorNumber", 1}, {"IntrusionSensor", "Normal"}};
 }
 
 /**
@@ -121,6 +124,7 @@ void getIntrusionByService(std::shared_ptr<AsyncResp> aResp,
  */
 void getPhysicalSecurityData(std::shared_ptr<AsyncResp> aResp)
 {
+/*
     crow::connections::systemBus->async_method_call(
         [aResp{std::move(aResp)}](
             const boost::system::error_code ec,
@@ -151,6 +155,7 @@ void getPhysicalSecurityData(std::shared_ptr<AsyncResp> aResp)
         "xyz.openbmc_project.ObjectMapper", "GetSubTree",
         "/xyz/openbmc_project/Intrusion", 1,
         std::array<const char *, 1>{"xyz.openbmc_project.Chassis.Intrusion"});
+*/
 }
 
 /**
@@ -171,6 +176,11 @@ class ChassisCollection : public Node
     }
 
   private:
+    void getChassisList(std::vector<std::string> &chassisList)
+    {
+         chassisList.emplace_back("xyz/openbmc_project/inventory/chassis0");
+    }
+
     /**
      * Functions triggers appropriate requests on DBus
      */
@@ -186,14 +196,18 @@ class ChassisCollection : public Node
             "xyz.openbmc_project.Inventory.Item.Chassis"};
 
         auto asyncResp = std::make_shared<AsyncResp>(res);
-        crow::connections::systemBus->async_method_call(
-            [asyncResp](const boost::system::error_code ec,
-                        const std::vector<std::string> &chassisList) {
-                if (ec)
-                {
-                    messages::internalError(asyncResp->res);
-                    return;
-                }
+        //crow::connections::systemBus->async_method_call(
+        //    [asyncResp](const boost::system::error_code ec,
+        //                const std::vector<std::string> &chassisList) {
+        //        if (ec)
+        //        {
+        //            messages::internalError(asyncResp->res);
+        //            return;
+        //        }
+
+	std::vector<std::string> chassisList;
+        getChassisList(chassisList);
+
                 nlohmann::json &chassisArray =
                     asyncResp->res.jsonValue["Members"];
                 chassisArray = nlohmann::json::array();
@@ -212,11 +226,11 @@ class ChassisCollection : public Node
 
                 asyncResp->res.jsonValue["Members@odata.count"] =
                     chassisArray.size();
-            },
-            "xyz.openbmc_project.ObjectMapper",
-            "/xyz/openbmc_project/object_mapper",
-            "xyz.openbmc_project.ObjectMapper", "GetSubTreePaths",
-            "/xyz/openbmc_project/inventory", 0, interfaces);
+        //    },
+        //    "xyz.openbmc_project.ObjectMapper",
+        //    "/xyz/openbmc_project/object_mapper",
+        //    "xyz.openbmc_project.ObjectMapper", "GetSubTreePaths",
+        //    "/xyz/openbmc_project/inventory", 0, interfaces);
     }
 };
 
