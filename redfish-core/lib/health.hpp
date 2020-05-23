@@ -159,6 +159,7 @@ struct HealthPopulate : std::enable_shared_from_this<HealthPopulate>
 
     void getGlobalPath()
     {
+        /*
         std::shared_ptr<HealthPopulate> self = shared_from_this();
         crow::connections::systemBus->async_method_call(
             [self](const boost::system::error_code ec,
@@ -175,10 +176,12 @@ struct HealthPopulate : std::enable_shared_from_this<HealthPopulate>
             "xyz.openbmc_project.ObjectMapper", "GetSubTreePaths", "/", 0,
             std::array<const char *, 1>{
                 "xyz.openbmc_project.Inventory.Item.Global"});
+        */
     }
 
     void getAllStatusAssociations()
     {
+        /*
         std::shared_ptr<HealthPopulate> self = shared_from_this();
         crow::connections::systemBus->async_method_call(
             [self](const boost::system::error_code ec,
@@ -201,6 +204,7 @@ struct HealthPopulate : std::enable_shared_from_this<HealthPopulate>
             },
             "xyz.openbmc_project.ObjectMapper", "/",
             "org.freedesktop.DBus.ObjectManager", "GetManagedObjects");
+        */
     }
 
     std::shared_ptr<AsyncResp> asyncResp;

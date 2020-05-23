@@ -1476,31 +1476,33 @@ class SystemsCollection : public Node
         res.jsonValue["@odata.id"] = "/redfish/v1/Systems";
         res.jsonValue["Name"] = "Computer System Collection";
 
-        crow::connections::systemBus->async_method_call(
-            [asyncResp](const boost::system::error_code ec,
-                        const std::variant<std::string> &hostName) {
+        //crow::connections::systemBus->async_method_call(
+        //    [asyncResp](const boost::system::error_code ec,
+        //                const std::variant<std::string> &hostName) {
                 nlohmann::json &iface_array =
                     asyncResp->res.jsonValue["Members"];
                 iface_array = nlohmann::json::array();
                 auto &count = asyncResp->res.jsonValue["Members@odata.count"];
                 count = 0;
-                if (ec)
+        //        if (ec)
                 {
                     iface_array.push_back(
                         {{"@odata.id", "/redfish/v1/Systems/system"}});
+                    iface_array.push_back(
+                        {{"@odata.id", "/redfish/v1/Systems/system1"}});
                     count = iface_array.size();
                     return;
                 }
-                BMCWEB_LOG_DEBUG << "Hypervisor is available";
-                iface_array.push_back(
-                    {{"@odata.id", "/redfish/v1/Systems/system"}});
-                iface_array.push_back(
-                    {{"@odata.id", "/redfish/v1/Systems/hypervisor"}});
-                count = iface_array.size();
-            },
-            "xyz.openbmc_project.Settings", "/xyz/openbmc_project/network/vmi",
-            "org.freedesktop.DBus.Properties", "Get",
-            "xyz.openbmc_project.Network.SystemConfiguration", "HostName");
+        //        BMCWEB_LOG_DEBUG << "Hypervisor is available";
+        //        iface_array.push_back(
+        //            {{"@odata.id", "/redfish/v1/Systems/system"}});
+        //        iface_array.push_back(
+        //            {{"@odata.id", "/redfish/v1/Systems/hypervisor"}});
+        //        count = iface_array.size();
+        //    },
+        //    "xyz.openbmc_project.Settings", "/xyz/openbmc_project/network/vmi",
+        //    "org.freedesktop.DBus.Properties", "Get",
+        //    "xyz.openbmc_project.Network.SystemConfiguration", "HostName");
     }
 };
 

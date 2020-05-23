@@ -191,9 +191,9 @@ class ChassisCollection : public Node
         res.jsonValue["@odata.id"] = "/redfish/v1/Chassis";
         res.jsonValue["Name"] = "Chassis Collection";
 
-        const std::array<const char *, 2> interfaces = {
-            "xyz.openbmc_project.Inventory.Item.Board",
-            "xyz.openbmc_project.Inventory.Item.Chassis"};
+        //const std::array<const char *, 2> interfaces = {
+        //    "xyz.openbmc_project.Inventory.Item.Board",
+        //    "xyz.openbmc_project.Inventory.Item.Chassis"};
 
         auto asyncResp = std::make_shared<AsyncResp>(res);
         //crow::connections::systemBus->async_method_call(
@@ -253,15 +253,60 @@ class Chassis : public Node
     }
 
   private:
+
+    void getChassisSubTree(const std::string &chassisId, crow::openbmc_mapper::GetSubTreeType &subtree)
+    {
+
+        std::vector<std::string> interfaces{
+                std::string("org.freedesktop.DBus.Introspectable"),
+                        std::string("org.freedesktop.DBus.Peer"),
+                        std::string("org.freedesktop.DBus.Properties"),
+                        std::string("xyz.openbmc_project.Inventory.Item.Chassis")
+        };
+
+        std::pair<std::string, std::vector<std::string>> connections(std::string("xyz.openbmc_project.Inventory.Manager"), interfaces);
+
+        subtree.emplace_back(std::pair<std::string,
+              std::vector<std::pair<std::string, std::vector<std::string>>>>(
+                std::string("/xyz/openbmc_project/inventory/system/chassis0"), {connections})
+            );
+    }
+
+    void getChassisSensors(const std::string &chassisId, std::variant<std::vector<std::string>> &resp)
+    {
+        resp = std::vector<std::string>{
+            std::string("/xyz/openbmc_project/sensors/fan_tach/System_Fan01"),
+            std::string("/xyz/openbmc_project/sensors/voltage/volt0"),
+            std::string("/xyz/openbmc_project/sensors/temperature/temp0"),
+            std::string("/xyz/openbmc_project/sensors/power/psu0")
+        };
+    }
+
+    void getChassisPropertiesList(const std::string &chassisId, std::vector<std::pair<std::string, VariantType>> &propertiesList)
+    {
+        propertiesList.emplace_back(
+            std::make_pair(std::string("PartNumber"), VariantType(std::string("PN1234")))
+        );
+        propertiesList.emplace_back(
+            std::make_pair(std::string("SerialNumber"), VariantType(std::string("SN1234")))
+        );
+        propertiesList.emplace_back(
+            std::make_pair(std::string("Manufacturer"), VariantType(std::string("MF1234")))
+        );
+        propertiesList.emplace_back(
+            std::make_pair(std::string("Model"), VariantType(std::string("MD1234")))
+        );
+    }
+
     /**
      * Functions triggers appropriate requests on DBus
      */
     void doGet(crow::Response &res, const crow::Request &req,
                const std::vector<std::string> &params) override
     {
-        const std::array<const char *, 2> interfaces = {
-            "xyz.openbmc_project.Inventory.Item.Board",
-            "xyz.openbmc_project.Inventory.Item.Chassis"};
+        //const std::array<const char *, 2> interfaces = {
+        //    "xyz.openbmc_project.Inventory.Item.Board",
+        //    "xyz.openbmc_project.Inventory.Item.Chassis"};
 
         // Check if there is required param, truly entering this shall be
         // impossible.
@@ -274,15 +319,20 @@ class Chassis : public Node
         const std::string &chassisId = params[0];
 
         auto asyncResp = std::make_shared<AsyncResp>(res);
-        crow::connections::systemBus->async_method_call(
-            [asyncResp, chassisId(std::string(chassisId))](
-                const boost::system::error_code ec,
-                const crow::openbmc_mapper::GetSubTreeType &subtree) {
-                if (ec)
-                {
-                    messages::internalError(asyncResp->res);
-                    return;
-                }
+
+        crow::openbmc_mapper::GetSubTreeType subtree;
+
+        getChassisSubTree(chassisId, subtree);
+
+        //crow::connections::systemBus->async_method_call(
+        //    [asyncResp, chassisId(std::string(chassisId))](
+        //        const boost::system::error_code ec,
+        //        const crow::openbmc_mapper::GetSubTreeType &subtree) {
+        //        if (ec)
+        //        {
+        //            messages::internalError(asyncResp->res);
+        //            return;
+        //        }
                 // Iterate over all retrieved ObjectPaths.
                 for (const std::pair<
                          std::string,
@@ -302,13 +352,15 @@ class Chassis : public Node
 
                     auto health = std::make_shared<HealthPopulate>(asyncResp);
 
-                    crow::connections::systemBus->async_method_call(
-                        [health](const boost::system::error_code ec,
-                                 std::variant<std::vector<std::string>> &resp) {
-                            if (ec)
-                            {
-                                return; // no sensors = no failures
-                            }
+                    std::variant<std::vector<std::string>> resp;
+
+                    //crow::connections::systemBus->async_method_call(
+                    //    [health](const boost::system::error_code ec,
+                    //             std::variant<std::vector<std::string>> &resp) {
+                    //        if (ec)
+                    //        {
+                    //            return; // no sensors = no failures
+                    //        }
                             std::vector<std::string> *data =
                                 std::get_if<std::vector<std::string>>(&resp);
                             if (data == nullptr)
@@ -316,11 +368,11 @@ class Chassis : public Node
                                 return;
                             }
                             health->inventory = std::move(*data);
-                        },
-                        "xyz.openbmc_project.ObjectMapper",
-                        path + "/all_sensors",
-                        "org.freedesktop.DBus.Properties", "Get",
-                        "xyz.openbmc_project.Association", "endpoints");
+                     //   },
+                     //   "xyz.openbmc_project.ObjectMapper",
+                     //   path + "/all_sensors",
+                     //   "org.freedesktop.DBus.Properties", "Get",
+                     //   "xyz.openbmc_project.Association", "endpoints");
 
                     health->populate();
 
@@ -343,8 +395,14 @@ class Chassis : public Node
                     const std::string &connectionName =
                         connectionNames[0].first;
 
+                    BMCWEB_LOG_DEBUG << "connectionName: " << connectionName.c_str();
+
                     const std::vector<std::string> &interfaces =
                         connectionNames[0].second;
+
+                    for (const std::string inf : interfaces)
+                        BMCWEB_LOG_DEBUG << "|--interfaces: " << inf;
+
                     const std::array<const char *, 2> hasIndicatorLed = {
                         "xyz.openbmc_project.Inventory.Item.Panel",
                         "xyz.openbmc_project.Inventory.Item.Board.Motherboard"};
@@ -359,11 +417,15 @@ class Chassis : public Node
                         }
                     }
 
-                    crow::connections::systemBus->async_method_call(
-                        [asyncResp, chassisId(std::string(chassisId))](
-                            const boost::system::error_code ec,
-                            const std::vector<std::pair<
-                                std::string, VariantType>> &propertiesList) {
+                    std::vector<std::pair<std::string, VariantType>> propertiesList;
+
+                    getChassisPropertiesList(chassisId, propertiesList);
+
+                    //crow::connections::systemBus->async_method_call(
+                    //    [asyncResp, chassisId(std::string(chassisId))](
+                    //        const boost::system::error_code ec,
+                    //        const std::vector<std::pair<
+                    //            std::string, VariantType>> &propertiesList) {
                             for (const std::pair<std::string, VariantType>
                                      &property : propertiesList)
                             {
@@ -409,21 +471,21 @@ class Chassis : public Node
                             asyncResp->res.jsonValue["Links"]["ManagedBy"] = {
                                 {{"@odata.id", "/redfish/v1/Managers/bmc"}}};
                             getChassisState(asyncResp);
-                        },
-                        connectionName, path, "org.freedesktop.DBus.Properties",
-                        "GetAll",
-                        "xyz.openbmc_project.Inventory.Decorator.Asset");
+                    //    },
+                    //    connectionName, path, "org.freedesktop.DBus.Properties",
+                    //    "GetAll",
+                    //    "xyz.openbmc_project.Inventory.Decorator.Asset");
                     return;
                 }
 
                 // Couldn't find an object with that name.  return an error
                 messages::resourceNotFound(
                     asyncResp->res, "#Chassis.v1_10_0.Chassis", chassisId);
-            },
-            "xyz.openbmc_project.ObjectMapper",
-            "/xyz/openbmc_project/object_mapper",
-            "xyz.openbmc_project.ObjectMapper", "GetSubTree",
-            "/xyz/openbmc_project/inventory", 0, interfaces);
+            //},
+            //"xyz.openbmc_project.ObjectMapper",
+            //"/xyz/openbmc_project/object_mapper",
+            //"xyz.openbmc_project.ObjectMapper", "GetSubTree",
+            //"/xyz/openbmc_project/inventory", 0, interfaces);
 
         getPhysicalSecurityData(asyncResp);
     }
