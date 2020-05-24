@@ -1,6 +1,8 @@
 #pragma once
 #include <sdbusplus/asio/connection.hpp>
 
+#include <internal_system.hpp>
+
 namespace crow
 {
 namespace connections
