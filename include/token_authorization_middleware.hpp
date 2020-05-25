@@ -403,7 +403,8 @@ template <typename... Middlewares> void requestRoutes(Crow<Middlewares...>& app)
 
             if (!username.empty() && !password.empty())
             {
-                if (pamAuthenticateUser(username, password) != PAM_SUCCESS)
+                //if (pamAuthenticateUser(username, password) != PAM_SUCCESS)
+                if (sys_auth_user(std::string(username).c_str(), std::string(password).c_str()) != 0)
                 {
                     res.result(boost::beast::http::status::unauthorized);
                 }

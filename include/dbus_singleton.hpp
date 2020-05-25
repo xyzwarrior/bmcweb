@@ -1,16 +1,16 @@
 #pragma once
-#ifdef BMCWEB_ENABLE_SDBUS
+//#ifdef BMCWEB_ENABLE_SDBUS
 #include <sdbusplus/asio/connection.hpp>
-#else
+//#else
 #include <internal_system.hpp>
-#endif
+//#endif
 
 namespace crow
 {
 namespace connections
 {
-	#ifdef BMCWEB_ENABLE_SDBUS
+//	#ifdef BMCWEB_ENABLE_SDBUS
 static std::shared_ptr<sdbusplus::asio::connection> systemBus;
-	#endif
+//	#endif
 } // namespace connections
 } // namespace crow
